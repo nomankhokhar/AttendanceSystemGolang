@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2/bson"
 
+	"AttendanceSystem/auth"
 	"AttendanceSystem/db"
 )
 
@@ -37,7 +38,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully" ,"user": user})
 }
 
 func Login(c *gin.Context) {
@@ -64,9 +65,17 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Generate the Token
+	token, err := auth.GenerateJWT(user.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error", "error_details": err.Error()})
+		return
+	}
+
 	// If the password is correct, return a success message
-	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user, "token": token})
 }
+
 
 func ForgotPassword(c *gin.Context) {
 	var input struct {
@@ -158,7 +167,7 @@ func ResetPassword(c *gin.Context) {
 
 	// Check if the token has expired
 	if time.Now().After(user.TokenExpiry) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Token expired"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL Token expired"})
 		return
 	}
 

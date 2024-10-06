@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,8 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
+	"AttendanceSystem/auth"
 	"AttendanceSystem/controllers/userController"
 	"AttendanceSystem/db"
+
 )
 
 // InsertAttendance handles the creation of a new attendance record
@@ -25,9 +28,34 @@ func InsertAttendance(c *gin.Context) {
 		return
 	}
 
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+	
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+
+	// Check if the email from the token matches the email from the input
+	if claims.Email != input.Email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+
 	// check the user is authorized and exists
 	var user *userController.User
-	user, err := userController.FindUserByEmail(input.Email)
+	user, err = userController.FindUserByEmail(input.Email)
 
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "email not found", "error_details": err.Error()})
@@ -73,11 +101,37 @@ func GetAttendanceByEmail(c *gin.Context) {
 	// Get the logged-in user's email from context
     email := c.Query("email")
 
+	
+
 	if email == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "email is required"})
 		return
 	}
 	
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+
+	// Check if the email from the token matches the email from the input
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+
 	// Fetch attendance records by email
 	attendances, err := GetAttendanceEmail(email)
 	if err != nil {
@@ -120,7 +174,7 @@ func GetAttendanceEmail(email string) ([]Attendance, error) {
 	return attendances, nil
 }
 
-
+// DeleteAttendanceByEmailAndID deletes an attendance record by email and ID
 func DeleteAttendanceByEmailAndID(c *gin.Context){
 	email := c.Query("email")
 	id := c.Query("id")
@@ -131,9 +185,37 @@ func DeleteAttendanceByEmailAndID(c *gin.Context){
 		return
 	}
 
+		
+
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+
+	// Check if the email from the token matches the email from the input
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+	
+
 	// Delete attendance record by email and ID
 
-	err := deleteAttendanceByEmailAndID(email , id)
+	err = deleteAttendanceByEmailAndID(email , id)
 
 	if err != nil {
 		if err != mongo.ErrNoDocuments {

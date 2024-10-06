@@ -13,6 +13,7 @@ import (
 	"AttendanceSystem/db"
 )
 
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -38,15 +39,15 @@ func main() {
 	// User Handlers
 	r.POST("/signup", userController.SignUp)
 	r.POST("/login", userController.Login)
+	
 	r.POST("/forgot-password", userController.ForgotPassword)
 	r.POST("/reset-password", userController.ResetPassword)
 
-
 	// User Attendance Handlers
+	r.POST("/attendance/insert", attendanceController.InsertAttendance) 
+	r.GET("/attendance/getattendance", attendanceController.GetAttendanceByEmail) 
+	r.DELETE("/attendance/deleteattendance", attendanceController.DeleteAttendanceByEmailAndID)
 
-	r.POST("/attendance", attendanceController.InsertAttendance) 
-	r.GET("/attendance", attendanceController.GetAttendanceByEmail) 
-	r.DELETE("/attendance", attendanceController.DeleteAttendanceByEmailAndID)
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
