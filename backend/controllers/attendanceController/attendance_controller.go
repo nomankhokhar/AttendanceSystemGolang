@@ -2,11 +2,14 @@ package attendanceController
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"AttendanceSystem/controllers/userController"
 	"AttendanceSystem/db"
@@ -115,4 +118,57 @@ func GetAttendanceEmail(email string) ([]Attendance, error) {
 	}
 
 	return attendances, nil
+}
+
+
+func DeleteAttendanceByEmailAndID(c *gin.Context){
+	email := c.Query("email")
+	id := c.Query("id")
+
+	// Check if email and ID are provided
+	if email == ""  || id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "email and ID are required"})
+		return
+	}
+
+	// Delete attendance record by email and ID
+
+	err := deleteAttendanceByEmailAndID(email , id)
+
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Attendance record not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete attendance record"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Attendance record deleted successfully"})	
+}
+
+
+// deleteAttendanceByEmailAndID deletes an attendance record by email and ID
+func deleteAttendanceByEmailAndID(email string, id string) error {
+	collection := db.GetDB().Collection("attendances")
+
+	// Convert the ID from string to MongoDB ObjectID
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid ID format: %v", err)
+	}
+
+	// Delete the attendance record by email and ID
+	result, err := collection.DeleteOne(context.Background(), bson.M{"email": email, "_id": objectID})
+	if err != nil {
+		return fmt.Errorf("failed to delete attendance record: %v", err)
+	}
+
+	// Check if any documents were deleted
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("no record found with the given email and ID")
+	}
+
+	fmt.Println("Deleted attendance record:", result.DeletedCount)
+	return nil
 }

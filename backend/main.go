@@ -46,7 +46,7 @@ func main() {
 
 	r.POST("/attendance", attendanceController.InsertAttendance) 
 	r.GET("/attendance", attendanceController.GetAttendanceByEmail) 
-
+	r.DELETE("/attendance", attendanceController.DeleteAttendanceByEmailAndID)
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
