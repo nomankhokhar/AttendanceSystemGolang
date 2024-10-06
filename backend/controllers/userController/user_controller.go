@@ -2,7 +2,7 @@ package userController
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"net/smtp"
 	"time"
@@ -60,7 +60,7 @@ func Login(c *gin.Context) {
 
 	// Compare the password from the request with the hashed password in the database
 	if !user.ComparePassword(loginData.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password", "error_details": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password", "error_details": "email or password is incorrect"})
 		return
 	}
 
@@ -129,7 +129,7 @@ func sendEmail(email string, resetLink string) {
 		from, []string{to}, []byte(msg))
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
 
