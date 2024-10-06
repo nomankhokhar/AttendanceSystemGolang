@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,7 +15,8 @@ var client *mongo.Client // Global client variable
 
 // Initializes the MongoDB client and returns it the main function
 func InitDB() (*mongo.Client, error) {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	databaseURL := os.Getenv("DATABASE_URL")
+	clientOptions := options.Client().ApplyURI(databaseURL)
 
 	// Initialize the global client variable
 	var err error
