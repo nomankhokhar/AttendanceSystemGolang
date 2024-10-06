@@ -35,7 +35,9 @@ func main() {
 
 	r.POST("/signup", controllers.SignUp)
 	r.POST("/login", controllers.Login)
-
+	r.POST("/forgot-password", controllers.ForgotPassword)
+	r.POST("/reset-password", controllers.ResetPassword)
+	
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
