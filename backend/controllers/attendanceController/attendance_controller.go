@@ -15,8 +15,16 @@ import (
 	"AttendanceSystem/auth"
 	"AttendanceSystem/controllers/userController"
 	"AttendanceSystem/db"
-
 )
+
+
+type UpdateAttendanceInput struct {
+	ID            primitive.ObjectID `json:"_id" binding:"required"` // Attendance ID
+	AdminEmail    string             `json:"admin_email" binding:"required"`
+	EmployeeEmail  string            `json:"employee_email" binding:"required"`
+	Authorized    string             `json:"authorized" binding:"required"`
+	CaughtUp      bool               `json:"caught_up"`
+}
 
 // InsertAttendance handles the creation of a new attendance record
 func InsertAttendance(c *gin.Context) {
@@ -253,4 +261,86 @@ func deleteAttendanceByEmailAndID(email string, id string) error {
 
 	fmt.Println("Deleted attendance record:", result.DeletedCount)
 	return nil
+}
+
+
+// only admin can update attendance
+func UpdateAttendanceByEmailAndID(c *gin.Context) {
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Check if the token starts with "Bearer "
+	if !strings.HasPrefix(tokenString, "Bearer ") {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token must start with 'Bearer '"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+
+
+	
+	// Check if the user is admin
+	isAdmin := claims.Role == "admin" // Assuming 'Role' is part of the claims
+
+	var input UpdateAttendanceInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Provide complete data", "error_details": err.Error()})
+		return
+	}
+
+	if claims.Email != input.AdminEmail {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+
+	// Retrieve the existing attendance record by ID
+	var existingAttendance Attendance
+	err = db.GetDB().Collection("attendances").FindOne(c, bson.M{"_id": input.ID}).Decode(&existingAttendance)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Attendance record not found"})
+		return
+	}
+
+	// Only allow admin to update the attendance record
+	if isAdmin {
+		// Ensure that the employee email matches the existing attendance record
+		if existingAttendance.Email != input.EmployeeEmail {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You can only update attendance for the specified employee"})
+			return
+		}
+
+		// Update the Authorized and CaughtUp fields
+		existingAttendance.Authorized = input.Authorized
+		existingAttendance.CaughtUp = input.CaughtUp
+	} else {
+		// Regular users cannot update attendance records
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can update attendance records"})
+		return
+	}
+
+	// Update the attendance record in the database
+	_, err = db.GetDB().Collection("attendances").UpdateOne(
+		c,
+		bson.M{"_id": input.ID},
+		bson.M{"$set": existingAttendance},
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update attendance record"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Attendance record updated successfully", "attendance": existingAttendance})
 }

@@ -14,6 +14,7 @@ import (
 
 	"AttendanceSystem/auth"
 	"AttendanceSystem/db"
+
 )
 
 func SignUp(c *gin.Context) {
@@ -66,7 +67,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Generate the Token
-	token, err := auth.GenerateJWT(user.Email)
+	token, err := auth.GenerateJWT(user.Email, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error", "error_details": err.Error()})
 		return

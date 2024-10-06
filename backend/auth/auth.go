@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+
 )
 
 var (
@@ -14,16 +15,18 @@ var (
 // Claims struct to hold the JWT claims
 type Claims struct {
 	Email string `json:"email"`
+	Role string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateJWT creates a new JWT token for a given email
-func GenerateJWT(email string) (string, error) {
+func GenerateJWT(email string, role string) (string, error) {
 	claims := Claims{
 		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)), // Token valid for 24 hours
 		},
+		Role: role,
 	}
 
 	// Create the token using the claims

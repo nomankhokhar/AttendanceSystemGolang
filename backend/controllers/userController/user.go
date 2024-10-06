@@ -18,6 +18,7 @@ type User struct {
 	Name         string             `bson:"name"`
 	Email        string             `bson:"email"`
 	Password     string             `bson:"password"`
+	Role         string             `bson:"role"`
 	CreatedAt    time.Time          `bson:"created_at"`
 	ResetToken   string             `bson:"reset_token,omitempty"`
 	TokenExpiry  time.Time          `bson:"token_expiry,omitempty"`
