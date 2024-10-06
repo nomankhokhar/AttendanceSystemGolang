@@ -10,35 +10,41 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var MongoClient *mongo.Client
+var client *mongo.Client // Global client variable
 
-func InitDB() *mongo.Client {
-    clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+// Initializes the MongoDB client and returns it the main function
+func InitDB() (*mongo.Client, error) {
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
-    client, err := mongo.NewClient(clientOptions)
-    if err != nil {
-        log.Fatal("Failed to create new MongoDB client:", err)
-    }
+	// Initialize the global client variable
+	var err error
+	client, err = mongo.NewClient(clientOptions)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create MongoDB client: %v", err)
+	}
 
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    err = client.Connect(ctx)
-    if err != nil {
-        log.Fatal("Failed to connect to MongoDB:", err)
-    }
+	// Connect to the MongoDB server
+	err = client.Connect(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MongoDB: %v", err)
+	}
 
-    err = client.Ping(ctx, nil)
-    if err != nil {
-        log.Fatal("Failed to ping MongoDB:", err)
-    }
+	// Check the connection with database
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to ping MongoDB: %v", err)
+	}
 
-    fmt.Println("Connected to MongoDB!")
-
-    MongoClient = client
-    return client
+	fmt.Println("Connected to database")
+	return client, nil
 }
 
-func GetCollection(client *mongo.Client, dbName string, collectionName string) *mongo.Collection {
-    return client.Database(dbName).Collection(collectionName)
+func GetDB() *mongo.Database {
+	if client == nil {
+		log.Fatal("Database not initialized")
+	}
+	return client.Database("attendance_system")
 }
