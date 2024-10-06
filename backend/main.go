@@ -1,14 +1,16 @@
 package main
 
 import (
-	"AttendanceSystem/controllers"
-	"AttendanceSystem/db"
 	"context"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+
+	"AttendanceSystem/controllers/attendanceController"
+	"AttendanceSystem/controllers/userController"
+	"AttendanceSystem/db"
 )
 
 func main() {
@@ -33,11 +35,18 @@ func main() {
 
 	r.GET("/ping", helloPoint)
 
-	r.POST("/signup", controllers.SignUp)
-	r.POST("/login", controllers.Login)
-	r.POST("/forgot-password", controllers.ForgotPassword)
-	r.POST("/reset-password", controllers.ResetPassword)
-	
+	// User Handlers
+	r.POST("/signup", userController.SignUp)
+	r.POST("/login", userController.Login)
+	r.POST("/forgot-password", userController.ForgotPassword)
+	r.POST("/reset-password", userController.ResetPassword)
+
+
+	// User Attendance Handlers
+
+	r.POST("/attendance", attendanceController.InsertAttendance) 
+	r.GET("/attendance", attendanceController.GetAttendanceByEmail) 
+
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
