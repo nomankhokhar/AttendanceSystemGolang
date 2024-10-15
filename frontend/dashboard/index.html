@@ -63,7 +63,7 @@
           onclick="signup()"
           class="w-full bg-blue-500 text-white py-3 rounded-md font-medium hover:bg-blue-600 focus:outline-none"
         >
-          Sign Up
+          Create User
         </button>
       </form>
 
@@ -77,7 +77,7 @@
         const password = document.getElementById("password").value;
         const role = document.getElementById("role").value;
 
-        const response = await fetch("/signup", {
+        const response = await fetch("http://localhost:8080/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password, role })
