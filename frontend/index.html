@@ -67,8 +67,11 @@
 
         if (response.ok) {
           alert("Login successful!");
-          // Redirect to dashboard or appropriate page
-          window.location.href = "/frontend/dashboard";
+          if (data.user.Role === "admin") {
+            window.location.href = "/frontend/dashboard/admin.html";
+          } else {
+            window.location.href = "/frontend/dashboard/user.html";
+          }
         } else {
           document.getElementById("loginMessage").textContent = data.error;
         }

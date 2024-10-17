@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex justify-center items-start pt-10">
+    <div class="w-full max-w-3xl bg-white rounded-lg shadow-lg">
+      <!-- Dashboard Header -->
+      <div class="p-6 bg-blue-600 rounded-t-lg text-center text-white">
+        <h1 class="text-2xl font-semibold">Admin Dashboard</h1>
+        <p class="text-sm mt-1">Manage users and view attendance details</p>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="flex justify-around bg-blue-100 py-2 text-blue-700">
+        <button onclick="showTab('createUser')" class="tab-button font-medium">
+          Create User
+        </button>
+        <button onclick="showTab('seeUsers')" class="tab-button font-medium">
+          See All Users
+        </button>
+        <button
+          onclick="showTab('userAttendance')"
+          class="tab-button font-medium"
+        >
+          User Attendance Details
+        </button>
+      </div>
+
+      <!-- Content Sections -->
+      <div id="content" class="p-8">
+        <!-- Create User Tab -->
+        <div id="createUser" class="tab-content">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Create User</h2>
+          <form id="signupForm" class="space-y-4">
+            <div>
+              <label for="name" class="block text-gray-700">Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label for="email" class="block text-gray-700">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label for="password" class="block text-gray-700">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label for="role" class="block text-gray-700">Role</label>
+              <select
+                id="role"
+                name="role"
+                class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="admin">Admin</option>
+                <option value="user">User</option>
+              </select>
+            </div>
+            <button
+              type="button"
+              onclick="signup()"
+              class="w-full bg-blue-500 text-white py-3 rounded-md font-medium hover:bg-blue-600 focus:outline-none"
+            >
+              Create User
+            </button>
+          </form>
+          <p
+            id="signupMessage"
+            class="text-center text-sm text-red-600 mt-4"
+          ></p>
+        </div>
+
+        <!-- See Users Tab -->
+        <div id="seeUsers" class="tab-content hidden">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">All Users</h2>
+          <p class="text-gray-700">This section will display all users.</p>
+          <!-- Placeholder for dynamic user list -->
+          <ul class="mt-4 list-disc pl-5 text-gray-600">
+            <li>User 1 - Admin</li>
+            <li>User 2 - User</li>
+          </ul>
+        </div>
+
+        <!-- User Attendance Details Tab -->
+        <div id="userAttendance" class="tab-content hidden">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">
+            User Attendance Details
+          </h2>
+          <p class="text-gray-700">
+            This section will display specific user attendance details.
+          </p>
+          <!-- Placeholder for dynamic attendance details -->
+          <p class="mt-4 text-gray-600">
+            User attendance details will be shown here.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showTab(tabId) {
+        // Hide all tabs
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((tab) => tab.classList.add("hidden"));
+        // Show selected tab
+        document.getElementById(tabId).classList.remove("hidden");
+      }
+
+      async function signup() {
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        const response = await fetch("http://localhost:8080/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password, role })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          alert("User created successfully!");
+        } else {
+          document.getElementById("signupMessage").textContent = data.error;
+        }
+      }
+    </script>
+  </body>
+</html>
