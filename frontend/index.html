@@ -66,8 +66,10 @@
         const data = await response.json();
 
         if (response.ok) {
+          sessionStorage.setItem("userData", JSON.stringify(data));
+
           alert("Login successful!");
-          if (data.user.Role === "admin") {
+          if (data.user.role === "admin") {
             window.location.href = "/frontend/dashboard/admin.html";
           } else {
             window.location.href = "/frontend/dashboard/user.html";

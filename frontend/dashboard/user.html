@@ -61,12 +61,13 @@
               id="email"
               class="w-full p-2 border border-gray-300 rounded-md"
               required
+              disabled
             />
           </div>
           <div>
             <label for="date" class="block text-gray-600">Date</label>
             <input
-              type="date"
+              type="datetime-local"
               id="date"
               class="w-full p-2 border border-gray-300 rounded-md"
               required
@@ -187,6 +188,12 @@
     </div>
 
     <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        if (userData) {
+          document.getElementById("email").value = userData.user.Email;
+        }
+      });
       function showTab(tabId) {
         document.querySelectorAll(".tab-content").forEach((tab) => {
           tab.classList.add("hidden");
@@ -206,24 +213,33 @@
       }
 
       async function fetchAttendance() {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email; // Retrieve email from session storage
+        const token = userData.token; // Retrieve token from session storage
+
         const response = await fetch(
-          "http://localhost:8080/attendance/getattendance?email=johndoe@example.com"
+          `http://localhost:8080/attendance/getattendance?email=${email}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}` // Pass token in header
+            }
+          }
         );
         const attendanceData = await response.json();
         const tableBody = document.getElementById("attendanceTableBody");
         tableBody.innerHTML = "";
 
-        attendanceData.forEach((attendance) => {
+        attendanceData?.attendances?.forEach((attendance) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-            <td class="border px-4 py-2">${attendance.date}</td>
-            <td class="border px-4 py-2">${attendance.start_time}</td>
-            <td class="border px-4 py-2">${attendance.finish_time}</td>
-            <td class="border px-4 py-2">${attendance.task}</td>
-            <td class="border px-4 py-2">
-              <button onclick="openEditModal('${attendance._id}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-            </td>
-          `;
+                <td class="border px-4 py-2">${attendance.date}</td>
+                <td class="border px-4 py-2">${attendance.start_time}</td>
+                <td class="border px-4 py-2">${attendance.finish_time}</td>
+                <td class="border px-4 py-2">${attendance.task}</td>
+                <td class="border px-4 py-2">
+                  <button onclick="openEditModal('${attendance._id}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                </td>
+              `;
           tableBody.appendChild(row);
         });
       }
@@ -239,10 +255,22 @@
         document.getElementById("editModal").classList.add("hidden");
       }
 
+      function formatDate(date) {
+        const d = new Date(date);
+        // Set the time to midnight (00:00:00) UTC
+        d.setUTCHours(0, 0, 0, 0);
+        return d.toISOString(); // Automatically formats to "YYYY-MM-DDTHH:mm:ssZ"
+      }
       async function addAttendance() {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email; // Retrieve email from session storage
+        const token = userData.token; // Retrieve token from session storage
+        const rawDate = document.getElementById("date").value;
+        const formattedDate = formatDate(rawDate); // Format the date
+
         const data = {
-          email: document.getElementById("email").value,
-          date: document.getElementById("date").value,
+          email: email, // Use email from session storage
+          date: formattedDate,
           start_time: document.getElementById("start_time").value,
           finish_time: document.getElementById("finish_time").value,
           hours_not_worked: parseFloat(
@@ -260,7 +288,10 @@
           "http://localhost:8080/attendance/insert",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}` // Pass token in header
+            },
             body: JSON.stringify(data)
           }
         );
@@ -278,21 +309,27 @@
         const startTime = document.getElementById("edit_start_time").value;
         const finishTime = document.getElementById("edit_finish_time").value;
 
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const adminEmail = userData.user.Email; // Use admin email from session storage
+        const token = userData.token; // Retrieve token from session storage
+        const employeeEmail = "johndoe@example.com"; // Replace with actual logic to fetch employee email
+
         const data = {
           _id: id,
-          admin_email: "johndoe@exampl.com", // Use appropriate admin email
-          employee_email: "johndoe@example.com", // Use the relevant employee email
+          admin_email: adminEmail, // Use admin email from session storage
+          employee_email: employeeEmail, // Use the relevant employee email
           authorized: "PAID", // Modify as needed based on the business logic
-          caught_up: true, // Modify based on the actual update logic
-          start_time: startTime,
-          finish_time: finishTime
+          caught_up: true // Modify based on the actual update logic
         };
 
         const response = await fetch(
           "http://localhost:8080/attendance/updateattendance",
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}` // Pass token in header
+            },
             body: JSON.stringify(data)
           }
         );
