@@ -237,7 +237,8 @@
                 <td class="border px-4 py-2">${attendance.finish_time}</td>
                 <td class="border px-4 py-2">${attendance.task}</td>
                 <td class="border px-4 py-2">
-                  <button onclick="openEditModal('${attendance._id}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                  <button onclick="openEditModal('${attendance.ID}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
+                  <button onclick="deleteAttendance('${attendance.ID}')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
                 </td>
               `;
           tableBody.appendChild(row);
@@ -301,6 +302,30 @@
           fetchAttendance(); // Refresh the attendance list after adding
         } else {
           alert("Failed to add attendance. Please try again.");
+        }
+      }
+
+      async function deleteAttendance(id) {
+        console.log(id);
+        const userData = JSON.parse(sessionStorage.getItem("userData")); // Fixed to match your session key
+        const email = userData.user.Email; // Retrieve email from session storage
+        const token = userData.token; // Retrieve token from session storage
+
+        const response = await fetch(
+          `http://localhost:8080/attendance/deleteattendance?email=${email}&id=${id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}` // Pass token in header
+            }
+          }
+        );
+
+        if (response.ok) {
+          alert("Attendance record deleted successfully.");
+          fetchAttendance(); // Refresh the attendance list after deletion
+        } else {
+          alert("Failed to delete attendance record. Please try again.");
         }
       }
 
