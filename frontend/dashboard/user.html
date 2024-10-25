@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-gray-100 p-8">
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+    <div class="max-w-[1100px] mx-auto bg-white p-6 rounded-lg shadow-lg">
       <h1 class="text-2xl font-semibold text-gray-800 mb-6">
         User Attendance System
       </h1>
@@ -75,15 +75,6 @@
               class="w-full p-2 border border-gray-300 rounded-md"
               required
               disabled
-            />
-          </div>
-          <div>
-            <label for="date" class="block text-gray-600">Date</label>
-            <input
-              type="datetime-local"
-              id="date"
-              class="w-full p-2 border border-gray-300 rounded-md"
-              required
             />
           </div>
 
@@ -241,11 +232,11 @@
         const attendanceData = await response.json();
         const tableBody = document.getElementById("attendanceTableBody");
         tableBody.innerHTML = "";
-
+        const today = new Date().toISOString().split("T")[0];
         attendanceData?.attendances?.forEach((attendance) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-          <td class="border px-4 py-2">${attendance?.date}</td>
+          <td class="border px-4 py-2">${attendance?.date?.split("T")[0]}</td>
           <td class="border px-4 py-2">${attendance.start_time}</td>
           <td class="border px-4 py-2">${attendance.finish_time}</td>
           <td class="border px-4 py-2">${attendance.hours_not_worked}</td>
@@ -256,18 +247,18 @@
             attendance.caught_up ? "Yes" : "No"
           }</td>
           <td class="border px-4 py-2">${attendance.sick ? "Yes" : "No"}</td>
-          <td class="border px-4 py-2">${attendance.total_hours}</td>
+          <td class="border px-4 py-2">${attendance.total_hours.toFixed(2)}</td>
           <td class="border px-4 py-2">${attendance.task}</td>
           <td class="border px-4 py-2">
-            <button onclick="openEditModal('${attendance.ID}', '${
-            attendance.start_time
-          }', '${
-            attendance.finish_time
-          }')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>
-            <button onclick="deleteAttendance('${
-              attendance.ID
-            }')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
-          </td>
+    ${
+      attendance.date.split("T")[0] === today
+        ? `<button onclick="openEditModal('${attendance.ID}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>`
+        : ""
+    }
+    <button onclick="deleteAttendance('${
+      attendance.ID
+    }')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+  </td>
         `;
           tableBody.appendChild(row);
         });
@@ -284,33 +275,78 @@
         document.getElementById("editModal").classList.add("hidden");
       }
 
-      function formatDate(date) {
-        const d = new Date(date);
-        // Set the time to midnight (00:00:00) UTC
-        d.setUTCHours(0, 0, 0, 0);
-        return d.toISOString(); // Automatically formats to "YYYY-MM-DDTHH:mm:ssZ"
+      function getTodayDate() {
+        const today = new Date(); // Get the current date
+        const year = today.getUTCFullYear(); // Get the full year
+        const month = String(today.getUTCMonth() + 1).padStart(2, "0"); // Get the month (0-indexed, add 1)
+        const day = String(today.getUTCDate()).padStart(2, "0"); // Get the day of the month
+
+        // Construct the date string in the desired format
+        const formattedDate = `${year}-${month}-${day}T00:00:00Z`;
+        return formattedDate; // Return the formatted date string
       }
+
+      const workingHours = (finish_time, start_time) => {
+        // Convert time strings to Date objects
+        const startTimeParts = start_time.split(":");
+        const finishTimeParts = finish_time.split(":");
+
+        const startDate = new Date();
+        startDate.setHours(
+          parseInt(startTimeParts[0]),
+          parseInt(startTimeParts[1]),
+          0,
+          0
+        ); // Set hours and minutes for start time
+
+        const finishDate = new Date();
+        finishDate.setHours(
+          parseInt(finishTimeParts[0]),
+          parseInt(finishTimeParts[1]),
+          0,
+          0
+        ); // Set hours and minutes for finish time
+
+        // Calculate the difference in milliseconds
+        const difference = finishDate - startDate; // difference in milliseconds
+        const hoursWorked = difference / (1000 * 60 * 60); // convert milliseconds to hours
+
+        return hoursWorked; // Return the calculated hours
+      };
+
       async function addAttendance() {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         const email = userData.user.Email; // Retrieve email from session storage
         const token = userData.token; // Retrieve token from session storage
-        const rawDate = document.getElementById("date").value;
-        const formattedDate = formatDate(rawDate); // Format the date
+
+        // Gather input values
+        const startTime = document.getElementById("start_time").value; // Start time input value
+        const finishTime = document.getElementById("finish_time").value; // Finish time input value
+        if (
+          Number(finishTime.split(":")[0]) <= Number(startTime.split(":")[0])
+        ) {
+          console.log(startTime.split(":")[0], finishTime.split(":")[0]);
+          alert("Finish time cannot be less than start time.");
+          return;
+        }
+        const hoursNotWorked = parseFloat(
+          document.getElementById("hours_not_worked").value
+        ); // Hours not worked
+        const reason = document.getElementById("reason").value; // Reason input value
+        const task = document.getElementById("task").value; // Task input value
 
         const data = {
           email: email, // Use email from session storage
-          date: formattedDate,
-          start_time: document.getElementById("start_time").value,
-          finish_time: document.getElementById("finish_time").value,
-          hours_not_worked: parseFloat(
-            document.getElementById("hours_not_worked").value
-          ),
-          reason: document.getElementById("reason").value,
-          task: document.getElementById("task").value,
+          date: getTodayDate(),
+          start_time: startTime,
+          finish_time: finishTime,
+          hours_not_worked: hoursNotWorked,
+          reason: reason,
+          task: task,
           authorized: "PAID",
-          caught_up: false,
+          caught_up: true,
           sick: false,
-          total_hours: 7.5
+          total_hours: workingHours(finishTime, startTime)
         };
 
         const response = await fetch(
