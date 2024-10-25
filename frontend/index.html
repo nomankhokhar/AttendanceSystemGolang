@@ -54,6 +54,14 @@
     </div>
 
     <script>
+      if (sessionStorage.getItem("userData")) {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        if (userData.user.role === "admin") {
+          window.location.href = "/frontend/dashboard/admin.html";
+        } else {
+          window.location.href = "/frontend/dashboard/user.html";
+        }
+      }
       async function login() {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
@@ -69,7 +77,7 @@
           sessionStorage.setItem("userData", JSON.stringify(data));
 
           alert("Login successful!");
-          if (data.user.role === "admin") {
+          if (data.user.Role === "admin") {
             window.location.href = "/frontend/dashboard/admin.html";
           } else {
             window.location.href = "/frontend/dashboard/user.html";
