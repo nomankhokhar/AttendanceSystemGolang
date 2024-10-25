@@ -252,13 +252,11 @@
           <td class="border px-4 py-2">
     ${
       attendance.date.split("T")[0] === today
-        ? `<button onclick="openEditModal('${attendance.ID}', '${attendance.start_time}', '${attendance.finish_time}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Edit</button>`
-        : ""
-    }
-    <button onclick="deleteAttendance('${
-      attendance.ID
-    }')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
-  </td>
+        ? `
+    <button onclick="deleteAttendance('${attendance.ID}')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+ `
+        : "Time Up"
+    } </td>
         `;
           tableBody.appendChild(row);
         });
@@ -314,6 +312,12 @@
         return hoursWorked; // Return the calculated hours
       };
 
+      const timeCatchup = (hours_not_worked, finish_time, start_time) => {
+        const hoursWorked = workingHours(finish_time, start_time);
+        const timeToCatchUp = hoursWorked + hours_not_worked;
+        return Math.abs(timeToCatchUp);
+      };
+
       async function addAttendance() {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         const email = userData.user.Email; // Retrieve email from session storage
@@ -325,7 +329,6 @@
         if (
           Number(finishTime.split(":")[0]) <= Number(startTime.split(":")[0])
         ) {
-          console.log(startTime.split(":")[0], finishTime.split(":")[0]);
           alert("Finish time cannot be less than start time.");
           return;
         }
@@ -346,7 +349,8 @@
           authorized: "PAID",
           caught_up: true,
           sick: false,
-          total_hours: workingHours(finishTime, startTime)
+          total_hours: workingHours(finishTime, startTime),
+          time_to_catch_up: timeCatchup(hoursNotWorked, finishTime, startTime)
         };
 
         const response = await fetch(
@@ -370,7 +374,6 @@
       }
 
       async function deleteAttendance(id) {
-        console.log(id);
         const userData = JSON.parse(sessionStorage.getItem("userData")); // Fixed to match your session key
         const email = userData.user.Email; // Retrieve email from session storage
         const token = userData.token; // Retrieve token from session storage
