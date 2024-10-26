@@ -16,26 +16,24 @@
 
       <!-- Tabs Navigation -->
       <div class="flex justify-around bg-blue-100 py-2 text-blue-700">
-        <button onclick="showTab('createUser')" class="tab-button font-medium">
-          Create User
-        </button>
-        <button onclick="showTab('seeUsers')" class="tab-button font-medium">
-          See All Users
+        <button onclick="showTab('manageUsers')" class="tab-button font-medium">
+          Manage Users
         </button>
         <button
           onclick="showTab('userAttendance')"
           class="tab-button font-medium"
         >
-          User Attendance Details
+          User Attendance
         </button>
       </div>
 
       <!-- Content Sections -->
       <div id="content" class="p-8">
-        <!-- Create User Tab -->
-        <div id="createUser" class="tab-content">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">Create User</h2>
-          <form id="signupForm" class="space-y-4">
+        <!-- Manage Users Tab -->
+        <div id="manageUsers" class="tab-content">
+          <h2 class="text-xl font-semibold text-gray-800 mb-4">Manage Users</h2>
+
+          <form id="userForm" class="space-y-4">
             <div>
               <label for="name" class="block text-gray-700">Name</label>
               <input
@@ -79,91 +77,219 @@
             </div>
             <button
               type="button"
-              onclick="signup()"
+              onclick="createUser()"
               class="w-full bg-blue-500 text-white py-3 rounded-md font-medium hover:bg-blue-600 focus:outline-none"
             >
               Create User
             </button>
           </form>
-          <p
-            id="signupMessage"
-            class="text-center text-sm text-red-600 mt-4"
-          ></p>
+          <p id="userMessage" class="text-center text-sm text-red-600 mt-4"></p>
+
+          <!-- Users Table -->
+          <h2 class="text-xl font-semibold text-gray-800 mt-8">All Users</h2>
+          <table class="min-w-full mt-4 bg-white border border-gray-300">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="py-2 px-4 border">Name</th>
+                <th class="py-2 px-4 border">Email</th>
+                <th class="py-2 px-4 border">Role</th>
+                <th class="py-2 px-4 border">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- User rows will be populated here -->
+            </tbody>
+          </table>
         </div>
 
-        <!-- See Users Tab -->
-        <div id="seeUsers" class="tab-content hidden">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">All Users</h2>
-          <p class="text-gray-700">This section will display all users.</p>
-          <!-- Placeholder for dynamic user list -->
-          <ul class="mt-4 list-disc pl-5 text-gray-600">
-            <li>User 1 - Admin</li>
-            <li>User 2 - User</li>
-          </ul>
-        </div>
-
-        <!-- User Attendance Details Tab -->
+        <!-- User Attendance Tab -->
         <div id="userAttendance" class="tab-content hidden">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">
-            User Attendance Details
+            User Attendance
           </h2>
-          <p class="text-gray-700">
-            This section will display specific user attendance details.
-          </p>
-          <!-- Placeholder for dynamic attendance details -->
-          <p class="mt-4 text-gray-600">
-            User attendance details will be shown here.
-          </p>
+
+          <label for="attendanceEmail" class="block text-gray-700"
+            >Select User Email</label
+          >
+          <select
+            id="attendanceEmail"
+            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onchange="getUserAttendance()"
+          >
+            <option value="">Select a user</option>
+            <!-- User emails will be populated here -->
+          </select>
+
+          <div id="attendanceDetails" class="mt-4">
+            <h3 class="text-lg font-semibold text-gray-800">
+              Attendance Details
+            </h3>
+            <div id="attendanceList" class="mt-2 text-gray-600">
+              <!-- Attendance details will be shown here -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <script>
-      if (sessionStorage.getItem("userData")) {
-        const userData = JSON.parse(sessionStorage.getItem("userData"));
-        const url = window.location.href; // Get the full URL
-        if (userData?.user?.Role === "user")
-          if (url.includes("admin.html")) {
+      // Check session storage and redirect based on user role
+      (function () {
+        if (sessionStorage.getItem("userData")) {
+          const userData = JSON.parse(sessionStorage.getItem("userData"));
+          const url = window.location.href; // Get the full URL
+          if (userData?.user?.Role === "user" && url.includes("admin.html")) {
             window.location.href = "/frontend/dashboard/user.html";
           }
-      } else {
-        window.location.href = "/frontend";
-      }
+        } else {
+          window.location.href = "/frontend";
+        }
+      })();
 
-      function showTab(tabId) {
-        // Hide all tabs
-        document
-          .querySelectorAll(".tab-content")
-          .forEach((tab) => tab.classList.add("hidden"));
-        // Show selected tab
-        document.getElementById(tabId).classList.remove("hidden");
-      }
-
-      async function signup() {
+      async function createUser() {
         const name = document.getElementById("name").value;
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
         const role = document.getElementById("role").value;
 
         if (!name || !email || !password || !role) {
-          document.getElementById("signupMessage").textContent =
+          document.getElementById("userMessage").textContent =
             "Please fill in all fields";
           return;
         }
 
-        const response = await fetch("http://localhost:8080/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password, role })
-        });
+        const response = await fetch(
+          "http://localhost:8080/createuser?email=" + email,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password, role })
+          }
+        );
+
         const data = await response.json();
 
         if (response.ok) {
           alert("User created successfully!");
+          getAllUsers(); // Refresh the user list
         } else {
-          document.getElementById("signupMessage").textContent = data.error;
+          document.getElementById("userMessage").textContent =
+            data.error || "Failed to create user";
         }
       }
+
+      async function getAllUsers() {
+        const response = await fetch(
+          "http://localhost:8080/getallusers?email=a@gmail.com"
+        );
+        const users = await response.json();
+
+        const userTableBody = document.getElementById("userTableBody");
+        userTableBody.innerHTML = ""; // Clear existing rows
+
+        users.forEach((user) => {
+          const row = `<tr>
+                    <td class="py-2 px-4 border">${user.name}</td>
+                    <td class="py-2 px-4 border">${user.email}</td>
+                    <td class="py-2 px-4 border">${user.role}</td>
+                    <td class="py-2 px-4 border">
+                        <button onclick="deleteUser('${user.email}')" class="text-red-500 hover:text-red-700">Delete</button>
+                        <button onclick="updateUser('${user.email}')" class="text-blue-500 hover:text-blue-700">Update</button>
+                    </td>
+                </tr>`;
+          userTableBody.insertAdjacentHTML("beforeend", row);
+        });
+      }
+
+      async function deleteUser(email) {
+        const response = await fetch(
+          "http://localhost:8080/deleteauser?email=" + email,
+          {
+            method: "DELETE"
+          }
+        );
+        const data = await response.json();
+        alert(data.message);
+        getAllUsers(); // Refresh the user list
+      }
+
+      async function updateUser(email) {
+        // Prompt for new password (you can enhance this with a modal dialog)
+        const newPassword = prompt("Enter new password:");
+        if (newPassword) {
+          const response = await fetch(
+            "http://localhost:8080/updateUser?email=" + email,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, password: newPassword })
+            }
+          );
+          const data = await response.json();
+          alert(data.message);
+          getAllUsers(); // Refresh the user list
+        }
+      }
+
+      async function getUserAttendance() {
+        const email = document.getElementById("attendanceEmail").value;
+
+        if (!email) return; // Exit if no user selected
+
+        const response = await fetch(
+          "http://localhost:8080/getuserattendance?email=" + email
+        );
+        const data = await response.json();
+
+        const attendanceList = document.getElementById("attendanceList");
+        attendanceList.innerHTML = ""; // Clear existing details
+
+        if (data.attendance && data.attendance.length > 0) {
+          data.attendance.forEach((attendance) => {
+            const attendanceDetail = `<div class="border-b border-gray-200 py-2">
+                        <strong>Date:</strong> ${attendance.date} <br>
+                        <strong>Start Time:</strong> ${attendance.startTime} <br>
+                        <strong>Finish Time:</strong> ${attendance.finishTime} <br>
+                        <strong>Reason:</strong> ${attendance.reason} <br>
+                    </div>`;
+            attendanceList.insertAdjacentHTML("beforeend", attendanceDetail);
+          });
+        } else {
+          attendanceList.innerHTML = "<p>No attendance records found.</p>";
+        }
+      }
+
+      function showTab(tabName) {
+        const tabs = document.querySelectorAll(".tab-content");
+        tabs.forEach((tab) => tab.classList.add("hidden")); // Hide all tabs
+
+        document.getElementById(tabName).classList.remove("hidden"); // Show selected tab
+
+        if (tabName === "manageUsers") {
+          getAllUsers(); // Load users when managing users tab is shown
+        } else if (tabName === "userAttendance") {
+          populateUserSelect(); // Load users for attendance when attendance tab is shown
+        }
+      }
+
+      async function populateUserSelect() {
+        const response = await fetch(
+          "http://localhost:8080/getallusers?email=a@gmail.com"
+        );
+        const users = await response.json();
+        const attendanceEmailSelect =
+          document.getElementById("attendanceEmail");
+        attendanceEmailSelect.innerHTML =
+          "<option value=''>Select a user</option>"; // Reset options
+
+        users.forEach((user) => {
+          const option = `<option value="${user.email}">${user.email}</option>`;
+          attendanceEmailSelect.insertAdjacentHTML("beforeend", option);
+        });
+      }
+
+      // Initialize by loading the user list on page load
+      document.addEventListener("DOMContentLoaded", getAllUsers);
     </script>
   </body>
 </html>

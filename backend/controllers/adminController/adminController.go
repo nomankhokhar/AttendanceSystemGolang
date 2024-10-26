@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Route to create a new user
@@ -33,8 +34,10 @@ func CreateUser(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
 		return
 	}
+
+	// Check if the email from the token matches the input email
 	if claims.Email != email {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is invalid"})
 		return
 	}
 
@@ -50,9 +53,26 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	// Check if a user with the provided email already exists
 	collection := db.GetDB().Collection("users")
-	_, err = collection.InsertOne(context.TODO(), user)
+	filter := bson.M{"email": user.Email}
+	var existingUser struct {
+		Email string `json:"email"`
+	}
 
+	err = collection.FindOne(context.TODO(), filter).Decode(&existingUser)
+	if err == nil {
+		// User already exists
+		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+		return
+	} else if err != mongo.ErrNoDocuments {
+		// Some other error occurred while querying the database
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	// Insert the new user
+	_, err = collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
@@ -100,8 +120,21 @@ func UpdateUser(c *gin.Context) {
 
 	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": requestData.Email, "name": requestData.Name}
-	update := bson.M{"$set": bson.M{"password": requestData.Password}}
 
+	// Check if user exists
+	var existingUser bson.M
+	err = collection.FindOne(context.TODO(), filter).Decode(&existingUser)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check user"})
+		return
+	}
+
+	// Update the user's password
+	update := bson.M{"$set": bson.M{"password": requestData.Password}}
 	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
@@ -174,10 +207,13 @@ func DeleteUser(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
 		return
 	}
+
+	// Ensure the email in the token matches the email in the request
 	if claims.Email != email {
-		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is invalid"})
 		return
 	}
+
 	var requestData struct {
 		Email string `json:"email"`
 		Name  string `json:"name"`
@@ -191,6 +227,23 @@ func DeleteUser(c *gin.Context) {
 	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": requestData.Email, "name": requestData.Name}
 
+	// Check if the user exists
+	var existingUser struct {
+		Email string `json:"email"`
+		Name  string `json:"name"`
+	}
+	err = collection.FindOne(context.TODO(), filter).Decode(&existingUser)
+	if err == mongo.ErrNoDocuments {
+		// User does not exist
+		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	} else if err != nil {
+		// Database error
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	// User exists, proceed to delete
 	_, err = collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
@@ -224,7 +277,14 @@ func GetUserAttendanceDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, attendanceRecords)
+	// Check if attendance records are empty
+	if len(attendanceRecords) == 0 {
+		c.JSON(http.StatusOK, gin.H{"attendance": nil})
+		return
+	}
+
+	// Return attendance data if records exist
+	c.JSON(http.StatusOK, gin.H{"attendance": attendanceRecords})
 }
 
 // Route to update attendance details based on given info
@@ -252,6 +312,7 @@ func UpdateUserAttendance(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
 		return
 	}
+
 	var requestData struct {
 		ID            string `json:"_id"`
 		AdminEmail    string `json:"admin_email"`
@@ -273,18 +334,31 @@ func UpdateUserAttendance(c *gin.Context) {
 
 	collection := db.GetDB().Collection("attendances")
 	filter := bson.M{"_id": objectID, "email": requestData.EmployeeEmail}
+
+	// Check if attendance exists
+	var existingAttendance bson.M
+	err = collection.FindOne(context.TODO(), filter).Decode(&existingAttendance)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Attendance not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check attendance"})
+		return
+	}
+
+	// Update the attendance
 	update := bson.M{
 		"$set": bson.M{
 			"authorized": requestData.Authorized,
 			"caught_up":  requestData.CaughtUp,
 		},
 	}
-
 	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update attendance"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Attendance updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Attendance updated successfully", "attendance_id": requestData.ID})
 }
