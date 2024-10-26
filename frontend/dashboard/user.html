@@ -192,6 +192,17 @@
     </div>
 
     <script>
+      if (sessionStorage.getItem("userData")) {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const url = window.location.href; // Get the full URL
+        if (userData?.user?.Role === "admin")
+          if (url.includes("user.html")) {
+            window.location.href = "/frontend/dashboard/admin.html";
+          }
+      } else {
+        window.location.href = "/frontend";
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         if (userData) {
@@ -263,7 +274,7 @@
         tableBody.innerHTML = ""; // Clear existing rows
 
         // Loop through the sorted attendance data and create table rows
-        sortedAttendances.forEach((attendance) => {
+        sortedAttendances?.forEach((attendance) => {
           const row = document.createElement("tr");
           row.innerHTML = `
                 <td class="border px-4 py-2">${
@@ -376,7 +387,7 @@
           total_hours: workingHours(finishTime, startTime),
           time_to_catch_up: timeCatchup(hoursNotWorked, finishTime, startTime)
         };
-        
+
         const response = await fetch(
           "http://localhost:8080/attendance/insert",
           {

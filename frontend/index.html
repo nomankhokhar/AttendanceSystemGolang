@@ -56,7 +56,7 @@
     <script>
       if (sessionStorage.getItem("userData")) {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
-        if (userData.user.role === "admin") {
+        if (userData.user.Role === "admin") {
           window.location.href = "/frontend/dashboard/admin.html";
         } else {
           window.location.href = "/frontend/dashboard/user.html";
@@ -72,11 +72,11 @@
           body: JSON.stringify({ email, password })
         });
         const data = await response.json();
-
         if (response.ok) {
           sessionStorage.setItem("userData", JSON.stringify(data));
 
           alert("Login successful!");
+
           if (data.user.Role === "admin") {
             window.location.href = "/frontend/dashboard/admin.html";
           } else {

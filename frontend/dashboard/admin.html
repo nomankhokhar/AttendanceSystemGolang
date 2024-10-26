@@ -119,6 +119,17 @@
     </div>
 
     <script>
+      if (sessionStorage.getItem("userData")) {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const url = window.location.href; // Get the full URL
+        if (userData?.user?.Role === "user")
+          if (url.includes("admin.html")) {
+            window.location.href = "/frontend/dashboard/user.html";
+          }
+      } else {
+        window.location.href = "/frontend";
+      }
+
       function showTab(tabId) {
         // Hide all tabs
         document
