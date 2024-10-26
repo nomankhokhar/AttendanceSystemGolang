@@ -1,9 +1,11 @@
 package adminController
 
 import (
+	"AttendanceSystem/auth"
 	"AttendanceSystem/db"
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,6 +14,30 @@ import (
 
 // Route to create a new user
 func CreateUser(c *gin.Context) {
+	email := c.Query("email")
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+
 	var user struct {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
@@ -25,7 +51,8 @@ func CreateUser(c *gin.Context) {
 	}
 
 	collection := db.GetDB().Collection("users")
-	_, err := collection.InsertOne(context.TODO(), user)
+	_, err = collection.InsertOne(context.TODO(), user)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
@@ -36,6 +63,30 @@ func CreateUser(c *gin.Context) {
 
 // Route to update a user's password based on email and name
 func UpdateUser(c *gin.Context) {
+	email := c.Query("email")
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
+
 	var requestData struct {
 		Email    string `json:"email"`
 		Name     string `json:"name"`
@@ -47,11 +98,11 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": requestData.Email, "name": requestData.Name}
 	update := bson.M{"$set": bson.M{"password": requestData.Password}}
 
-	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	_, err = collection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
@@ -62,6 +113,29 @@ func UpdateUser(c *gin.Context) {
 
 // Route to get all users
 func GetAllUsers(c *gin.Context) {
+	email := c.Query("email")
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
 	collection := db.GetDB().Collection("users")
 	cursor, err := collection.Find(context.TODO(), bson.M{})
 	if err != nil {
@@ -81,6 +155,29 @@ func GetAllUsers(c *gin.Context) {
 
 // Route to delete a user based on email and name
 func DeleteUser(c *gin.Context) {
+	email := c.Query("email")
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
 	var requestData struct {
 		Email string `json:"email"`
 		Name  string `json:"name"`
@@ -94,7 +191,7 @@ func DeleteUser(c *gin.Context) {
 	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": requestData.Email, "name": requestData.Name}
 
-	_, err := collection.DeleteOne(context.TODO(), filter)
+	_, err = collection.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
 		return
@@ -111,7 +208,7 @@ func GetUserAttendanceDetail(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("users")
+	collection := db.GetDB().Collection("attendances")
 	filter := bson.M{"email": email}
 
 	cursor, err := collection.Find(context.TODO(), filter)
@@ -132,6 +229,29 @@ func GetUserAttendanceDetail(c *gin.Context) {
 
 // Route to update attendance details based on given info
 func UpdateUserAttendance(c *gin.Context) {
+	email := c.Query("email")
+
+	// Extract token from the Authorization header
+	tokenString := c.GetHeader("Authorization")
+
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization token is required"})
+		return
+	}
+
+	// Remove "Bearer " prefix to get the actual token
+	tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+
+	// Validate the token and get claims
+	claims, err := auth.ValidateToken(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token", "error_details": err.Error()})
+		return
+	}
+	if claims.Email != email {
+		c.JSON(http.StatusUnauthorized, gin.H{"error_details": "Email is Invalid"})
+		return
+	}
 	var requestData struct {
 		ID            string `json:"_id"`
 		AdminEmail    string `json:"admin_email"`
@@ -151,7 +271,7 @@ func UpdateUserAttendance(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("users")
+	collection := db.GetDB().Collection("attendances")
 	filter := bson.M{"_id": objectID, "email": requestData.EmployeeEmail}
 	update := bson.M{
 		"$set": bson.M{
