@@ -229,35 +229,70 @@
             }
           }
         );
+
+        // Check if response is OK (status 200)
+        if (!response.ok) {
+          console.error("Error fetching attendance data:", response.statusText);
+          return; // Exit if there was an error
+        }
+
         const attendanceData = await response.json();
+        const today = getTodayDate();
+
+        // Sort and display the attendance data
+        sortAndDisplayAttendance(attendanceData, today);
+      }
+
+      function getTodayDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+        const day = String(today.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`; // Return date in YYYY-MM-DD format
+      }
+      // Function to sort and display attendance records
+      function sortAndDisplayAttendance(attendanceData, today) {
+        // Sort the attendances array by date in descending order
+        const sortedAttendances = attendanceData?.attendances?.sort((a, b) => {
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateB - dateA; // Sort in descending order
+        });
+
         const tableBody = document.getElementById("attendanceTableBody");
-        tableBody.innerHTML = "";
-        const today = new Date().toISOString().split("T")[0];
-        attendanceData?.attendances?.forEach((attendance) => {
+        tableBody.innerHTML = ""; // Clear existing rows
+
+        // Loop through the sorted attendance data and create table rows
+        sortedAttendances.forEach((attendance) => {
           const row = document.createElement("tr");
           row.innerHTML = `
-          <td class="border px-4 py-2">${attendance?.date?.split("T")[0]}</td>
-          <td class="border px-4 py-2">${attendance.start_time}</td>
-          <td class="border px-4 py-2">${attendance.finish_time}</td>
-          <td class="border px-4 py-2">${attendance.hours_not_worked}</td>
-          <td class="border px-4 py-2">${attendance.reason}</td>
-          <td class="border px-4 py-2">${attendance.authorized}</td>
-          <td class="border px-4 py-2">${attendance.time_to_catch_up}</td>
-          <td class="border px-4 py-2">${
-            attendance.caught_up ? "Yes" : "No"
-          }</td>
-          <td class="border px-4 py-2">${attendance.sick ? "Yes" : "No"}</td>
-          <td class="border px-4 py-2">${attendance.total_hours.toFixed(2)}</td>
-          <td class="border px-4 py-2">${attendance.task}</td>
-          <td class="border px-4 py-2">
-    ${
-      attendance.date.split("T")[0] === today
-        ? `
-    <button onclick="deleteAttendance('${attendance.ID}')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
- `
-        : "Time Up"
-    } </td>
-        `;
+                <td class="border px-4 py-2">${
+                  attendance?.date?.split("T")[0]
+                }</td>
+                <td class="border px-4 py-2">${attendance.start_time}</td>
+                <td class="border px-4 py-2">${attendance.finish_time}</td>
+                <td class="border px-4 py-2">${attendance.hours_not_worked}</td>
+                <td class="border px-4 py-2">${attendance.reason}</td>
+                <td class="border px-4 py-2">${attendance.authorized}</td>
+                <td class="border px-4 py-2">${attendance.time_to_catch_up}</td>
+                <td class="border px-4 py-2">${
+                  attendance.caught_up ? "Yes" : "No"
+                }</td>
+                <td class="border px-4 py-2">${
+                  attendance.sick ? "Yes" : "No"
+                }</td>
+                <td class="border px-4 py-2">${attendance.total_hours.toFixed(
+                  2
+                )}</td>
+                <td class="border px-4 py-2">${attendance.task}</td>
+                <td class="border px-4 py-2">
+                    ${
+                      attendance.date.split("T")[0] === today
+                        ? `<button onclick="deleteAttendance('${attendance.ID}')" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>`
+                        : "Time Up"
+                    }
+                </td>
+            `;
           tableBody.appendChild(row);
         });
       }
@@ -271,17 +306,6 @@
 
       function closeEditModal() {
         document.getElementById("editModal").classList.add("hidden");
-      }
-
-      function getTodayDate() {
-        const today = new Date(); // Get the current date
-        const year = today.getUTCFullYear(); // Get the full year
-        const month = String(today.getUTCMonth() + 1).padStart(2, "0"); // Get the month (0-indexed, add 1)
-        const day = String(today.getUTCDate()).padStart(2, "0"); // Get the day of the month
-
-        // Construct the date string in the desired format
-        const formattedDate = `${year}-${month}-${day}T00:00:00Z`;
-        return formattedDate; // Return the formatted date string
       }
 
       const workingHours = (finish_time, start_time) => {
@@ -340,7 +364,7 @@
 
         const data = {
           email: email, // Use email from session storage
-          date: getTodayDate(),
+          date: getTodayDate() + "T00:00:00Z",
           start_time: startTime,
           finish_time: finishTime,
           hours_not_worked: hoursNotWorked,
@@ -352,7 +376,7 @@
           total_hours: workingHours(finishTime, startTime),
           time_to_catch_up: timeCatchup(hoursNotWorked, finishTime, startTime)
         };
-
+        
         const response = await fetch(
           "http://localhost:8080/attendance/insert",
           {
