@@ -24,7 +24,7 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	_, err := collection.InsertOne(context.TODO(), user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
@@ -62,7 +62,7 @@ func UpdateUser(c *gin.Context) {
 
 // Route to get all users
 func GetAllUsers(c *gin.Context) {
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	cursor, err := collection.Find(context.TODO(), bson.M{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve users"})
@@ -91,7 +91,7 @@ func DeleteUser(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": requestData.Email, "name": requestData.Name}
 
 	_, err := collection.DeleteOne(context.TODO(), filter)
@@ -111,7 +111,7 @@ func GetUserAttendanceDetail(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	filter := bson.M{"email": email}
 
 	cursor, err := collection.Find(context.TODO(), filter)
@@ -151,7 +151,7 @@ func UpdateUserAttendance(c *gin.Context) {
 		return
 	}
 
-	collection := db.GetDB().Collection("attendances")
+	collection := db.GetDB().Collection("users")
 	filter := bson.M{"_id": objectID, "email": requestData.EmployeeEmail}
 	update := bson.M{
 		"$set": bson.M{

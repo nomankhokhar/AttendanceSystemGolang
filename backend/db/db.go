@@ -25,7 +25,7 @@ func InitDB() (*mongo.Client, error) {
 		return nil, fmt.Errorf("failed to create MongoDB client: %v", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	// Connect to the MongoDB server
