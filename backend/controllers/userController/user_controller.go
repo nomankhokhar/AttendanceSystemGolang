@@ -14,7 +14,6 @@ import (
 
 	"AttendanceSystem/auth"
 	"AttendanceSystem/db"
-
 )
 
 func SignUp(c *gin.Context) {
@@ -39,7 +38,7 @@ func SignUp(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User created successfully" ,"user": user})
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": user})
 }
 
 func Login(c *gin.Context) {
@@ -60,12 +59,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Compare the password from the request with the hashed password in the database
-	if !user.ComparePassword(loginData.Password) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password", "error_details": "email or password is incorrect"})
-		return
-	}
-
 	// Generate the Token
 	token, err := auth.GenerateJWT(user.Email, user.Role)
 	if err != nil {
@@ -76,7 +69,6 @@ func Login(c *gin.Context) {
 	// If the password is correct, return a success message
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "user": user, "token": token})
 }
-
 
 func ForgotPassword(c *gin.Context) {
 	var input struct {
@@ -121,7 +113,7 @@ func ForgotPassword(c *gin.Context) {
 
 func sendEmail(email string, resetLink string) {
 	// Owner email
-	from := "" // Your email address
+	from := ""     // Your email address
 	password := "" // Your email password
 
 	// Sender data to user

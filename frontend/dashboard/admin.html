@@ -146,24 +146,36 @@
         }
       })();
 
+      // Retrieve token from session storage
+      function getToken() {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        return userData.token; // Retrieve the token
+      }
+
       async function createUser() {
         const name = document.getElementById("name").value;
-        const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
         const role = document.getElementById("role").value;
-
-        if (!name || !email || !password || !role) {
+        const userEmail = document.getElementById("email").value;
+        if (!name || !password || !role) {
           document.getElementById("userMessage").textContent =
             "Please fill in all fields";
           return;
         }
 
+        // Retrieve email from session storage
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
+
         const response = await fetch(
           "http://localhost:8080/createuser?email=" + email,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, role })
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${getToken()}` // Include Bearer token
+            },
+            body: JSON.stringify({ name, email: userEmail, password, role })
           }
         );
 
@@ -179,9 +191,20 @@
       }
 
       async function getAllUsers() {
+        // Retrieve email from session storage
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
+
         const response = await fetch(
-          "http://localhost:8080/getallusers?email=a@gmail.com"
+          "http://localhost:8080/getallusers?email=" + email,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${getToken()}` // Include Bearer token
+            }
+          }
         );
+
         const users = await response.json();
 
         const userTableBody = document.getElementById("userTableBody");
@@ -189,40 +212,61 @@
 
         users.forEach((user) => {
           const row = `<tr>
-                    <td class="py-2 px-4 border">${user.name}</td>
-                    <td class="py-2 px-4 border">${user.email}</td>
-                    <td class="py-2 px-4 border">${user.role}</td>
-                    <td class="py-2 px-4 border">
-                        <button onclick="deleteUser('${user.email}')" class="text-red-500 hover:text-red-700">Delete</button>
-                        <button onclick="updateUser('${user.email}')" class="text-blue-500 hover:text-blue-700">Update</button>
-                    </td>
-                </tr>`;
+                      <td class="py-2 px-4 border">${user.name}</td>
+                      <td class="py-2 px-4 border">${user.email}</td>
+                      <td class="py-2 px-4 border">${user.role}</td>
+                      <td class="py-2 px-4 border">
+                          <button onclick="deleteUser('${user.name}', '${user.email}')" class="text-red-500 hover:text-red-700">Delete</button>
+                          <button onclick="updateUser('${user.name}', '${user.email}')" class="text-blue-500 hover:text-blue-700">Update</button>
+                      </td>
+                  </tr>`;
           userTableBody.insertAdjacentHTML("beforeend", row);
         });
       }
 
-      async function deleteUser(email) {
+      async function deleteUser(userName, userEmail) {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
+
         const response = await fetch(
-          "http://localhost:8080/deleteauser?email=" + email,
+          `http://localhost:8080/deleteauser + ${email}`,
           {
-            method: "DELETE"
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: userEmail,
+              name: userName
+            })
           }
         );
+
         const data = await response.json();
         alert(data.message);
-        getAllUsers(); // Refresh the user list
+        getAllUsers();
       }
 
-      async function updateUser(email) {
-        // Prompt for new password (you can enhance this with a modal dialog)
+      async function updateUser(userName, userEmail) {
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
+
         const newPassword = prompt("Enter new password:");
         if (newPassword) {
           const response = await fetch(
             "http://localhost:8080/updateUser?email=" + email,
             {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, password: newPassword })
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getToken()}` // Include Bearer token
+              },
+              body: JSON.stringify({
+                email: userEmail,
+                name: userName,
+                password: newPassword
+              })
             }
           );
           const data = await response.json();
@@ -232,12 +276,18 @@
       }
 
       async function getUserAttendance() {
-        const email = document.getElementById("attendanceEmail").value;
-
-        if (!email) return; // Exit if no user selected
+        // Retrieve email from session storage
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
 
         const response = await fetch(
-          "http://localhost:8080/getuserattendance?email=" + email
+          "http://localhost:8080/getuserattendance?email=" + email,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${getToken()}` // Include Bearer token
+            }
+          }
         );
         const data = await response.json();
 
@@ -273,8 +323,18 @@
       }
 
       async function populateUserSelect() {
+        // Retrieve email from session storage
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const email = userData.user.Email;
+
         const response = await fetch(
-          "http://localhost:8080/getallusers?email=a@gmail.com"
+          "http://localhost:8080/getallusers?email=" + email,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${getToken()}` // Include Bearer token
+            }
+          }
         );
         const users = await response.json();
         const attendanceEmailSelect =
