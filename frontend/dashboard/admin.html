@@ -145,6 +145,12 @@
         const password = document.getElementById("password").value;
         const role = document.getElementById("role").value;
 
+        if (!name || !email || !password || !role) {
+          document.getElementById("signupMessage").textContent =
+            "Please fill in all fields";
+          return;
+        }
+
         const response = await fetch("http://localhost:8080/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

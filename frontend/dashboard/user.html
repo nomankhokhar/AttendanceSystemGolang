@@ -24,14 +24,14 @@
         <button
           onclick="showTab('allAttendance')"
           id="tabAllAttendance"
-          class="tab-button bg-blue-500 text-white py-2 px-4 rounded"
+          class="bg-blue-500 text-white py-2 px-4 rounded"
         >
           All Attendance
         </button>
         <button
           onclick="showTab('addAttendance')"
           id="tabAddAttendance"
-          class="tab-button bg-gray-200 py-2 px-4 rounded"
+          class="bg-blue-500 text-white py-2 px-4 rounded"
         >
           Add Attendance
         </button>
@@ -99,6 +99,7 @@
               <input
                 type="time"
                 id="start_time"
+                value="13:00"
                 class="w-full p-2 border border-gray-300 rounded-md"
                 required
               />
@@ -110,6 +111,7 @@
               <input
                 type="time"
                 id="finish_time"
+                value="21:00"
                 class="w-full p-2 border border-gray-300 rounded-md"
                 required
               />
@@ -222,6 +224,10 @@
       }
 
       async function fetchAttendance() {
+        if (!sessionStorage.getItem("userData")) {
+          alert("User data not found!");
+          return;
+        }
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         const email = userData.user.Email; // Retrieve email from session storage
         const token = userData.token; // Retrieve token from session storage
@@ -304,17 +310,6 @@
         });
       }
 
-      function openEditModal(id, startTime, finishTime) {
-        document.getElementById("edit_id").value = id;
-        document.getElementById("edit_start_time").value = startTime;
-        document.getElementById("edit_finish_time").value = finishTime;
-        document.getElementById("editModal").classList.remove("hidden");
-      }
-
-      function closeEditModal() {
-        document.getElementById("editModal").classList.add("hidden");
-      }
-
       const workingHours = (finish_time, start_time) => {
         // Convert time strings to Date objects
         const startTimeParts = start_time.split(":");
@@ -351,6 +346,10 @@
 
       async function addAttendance() {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
+        if (!userData) {
+          alert("User data not found!");
+          return;
+        }
         const email = userData.user.Email; // Retrieve email from session storage
         const token = userData.token; // Retrieve token from session storage
 
@@ -368,6 +367,18 @@
         ); // Hours not worked
         const reason = document.getElementById("reason").value; // Reason input value
         const task = document.getElementById("task").value; // Task input value
+
+        if (
+          email === "" ||
+          startTime === "" ||
+          finishTime === "" ||
+          task === "" ||
+          reason === "" ||
+          hoursNotWorked === ""
+        ) {
+          alert("Please fill in all required fields.");
+          return;
+        }
 
         const data = {
           email: email, // Use email from session storage
@@ -406,6 +417,10 @@
 
       async function deleteAttendance(id) {
         const userData = JSON.parse(sessionStorage.getItem("userData")); // Fixed to match your session key
+        if (!userData) {
+          alert("User data not found!");
+          return;
+        }
         const email = userData.user.Email; // Retrieve email from session storage
         const token = userData.token; // Retrieve token from session storage
 
@@ -424,44 +439,6 @@
           fetchAttendance(); // Refresh the attendance list after deletion
         } else {
           alert("Failed to delete attendance record. Please try again.");
-        }
-      }
-
-      async function updateAttendance() {
-        const id = document.getElementById("edit_id").value;
-        const startTime = document.getElementById("edit_start_time").value;
-        const finishTime = document.getElementById("edit_finish_time").value;
-
-        const userData = JSON.parse(sessionStorage.getItem("userData"));
-        const adminEmail = userData.user.Email; // Use admin email from session storage
-        const token = userData.token; // Retrieve token from session storage
-        const employeeEmail = "johndoe@example.com"; // Replace with actual logic to fetch employee email
-
-        const data = {
-          _id: id,
-          admin_email: adminEmail, // Use admin email from session storage
-          employee_email: employeeEmail, // Use the relevant employee email
-          authorized: "PAID", // Modify as needed based on the business logic
-          caught_up: true // Modify based on the actual update logic
-        };
-
-        const response = await fetch(
-          "http://localhost:8080/attendance/updateattendance",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}` // Pass token in header
-            },
-            body: JSON.stringify(data)
-          }
-        );
-
-        if (response.ok) {
-          closeEditModal();
-          fetchAttendance(); // Refresh the attendance list after update
-        } else {
-          alert("Failed to update attendance. Please try again.");
         }
       }
 
