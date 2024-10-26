@@ -93,6 +93,7 @@
                 <th class="py-2 px-4 border">Name</th>
                 <th class="py-2 px-4 border">Email</th>
                 <th class="py-2 px-4 border">Role</th>
+                <th class="py-2 px-4 border">Password</th>
                 <th class="py-2 px-4 border">Actions</th>
               </tr>
             </thead>
@@ -114,7 +115,7 @@
           <select
             id="attendanceEmail"
             class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onchange="getUserAttendance()"
+            onchange="getUserAttendance(this.value)"
           >
             <option value="">Select a user</option>
             <!-- User emails will be populated here -->
@@ -124,7 +125,10 @@
             <h3 class="text-lg font-semibold text-gray-800">
               Attendance Details
             </h3>
-            <div id="attendanceList" class="mt-2 text-gray-600">
+            <div
+              id="attendanceList"
+              class="mt-2 text-gray-600 overflow-x-auto max-w-full p-4"
+            >
               <!-- Attendance details will be shown here -->
             </div>
           </div>
@@ -210,14 +214,15 @@
         const userTableBody = document.getElementById("userTableBody");
         userTableBody.innerHTML = ""; // Clear existing rows
 
-        users.forEach((user) => {
+        users?.forEach((user) => {
           const row = `<tr>
                       <td class="py-2 px-4 border">${user.name}</td>
                       <td class="py-2 px-4 border">${user.email}</td>
                       <td class="py-2 px-4 border">${user.role}</td>
+                      <td class="py-2 px-4 border">${user.password}</td>
                       <td class="py-2 px-4 border">
-                          <button onclick="deleteUser('${user.name}', '${user.email}')" class="text-red-500 hover:text-red-700">Delete</button>
-                          <button onclick="updateUser('${user.name}', '${user.email}')" class="text-blue-500 hover:text-blue-700">Update</button>
+                          <button onclick="deleteUser('${user.name}', '${user.email}')" class="bg-red-500 text-white px-2 py-1 rounded hover:text-red-700">Delete</button>
+                          <button onclick="updateUser('${user.name}', '${user.email}')" class="bg-blue-500 text-white px-2 py-1 rounded hover:text-blue-700">Update</button>
                       </td>
                   </tr>`;
           userTableBody.insertAdjacentHTML("beforeend", row);
@@ -228,8 +233,13 @@
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         const email = userData.user.Email;
 
+        if (email == userEmail) {
+          alert("You cannot delete yourself account!");
+          return;
+        }
+
         const response = await fetch(
-          `http://localhost:8080/deleteauser + ${email}`,
+          "http://localhost:8080/deleteauser?email=" + email,
           {
             method: "DELETE",
             headers: {
@@ -275,13 +285,9 @@
         }
       }
 
-      async function getUserAttendance() {
-        // Retrieve email from session storage
-        const userData = JSON.parse(sessionStorage.getItem("userData"));
-        const email = userData.user.Email;
-
+      async function getUserAttendance(userEmail) {
         const response = await fetch(
-          "http://localhost:8080/getuserattendance?email=" + email,
+          "http://localhost:8080/getuserattendance?email=" + userEmail,
           {
             method: "GET",
             headers: {
@@ -295,17 +301,109 @@
         attendanceList.innerHTML = ""; // Clear existing details
 
         if (data.attendance && data.attendance.length > 0) {
+          // Create a table to display attendance records
+          const table = document.createElement("table");
+          table.className = "min-w-full bg-white border border-gray-200";
+
+          // Create table header
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+                <tr>
+                    <th class="border px-4 py-2">Date</th>
+                    <th class="border px-4 py-2">Email</th>
+                    <th class="border px-4 py-2">Start Time</th>
+                    <th class="border px-4 py-2">Finish Time</th>
+                    <th class="border px-4 py-2">Total Hours</th>
+                    <th class="border px-4 py-2">Hours Not Worked</th>
+                    <th class="border px-4 py-2">Reason</th>
+                    <th class="border px-4 py-2">Task</th>
+                    <th class="border px-4 py-2">Time to Catch Up</th>
+                    <th class="border px-4 py-2">Caught Up</th>
+                    <th class="border px-4 py-2">Authorized</th>
+                    <th class="border px-4 py-2">Sick</th>
+                    <th class="border px-4 py-2">Edit</th>
+                </tr>`;
+          table.appendChild(thead);
+
+          // Create table body
+          const tbody = document.createElement("tbody");
           data.attendance.forEach((attendance) => {
-            const attendanceDetail = `<div class="border-b border-gray-200 py-2">
-                        <strong>Date:</strong> ${attendance.date} <br>
-                        <strong>Start Time:</strong> ${attendance.startTime} <br>
-                        <strong>Finish Time:</strong> ${attendance.finishTime} <br>
-                        <strong>Reason:</strong> ${attendance.reason} <br>
-                    </div>`;
-            attendanceList.insertAdjacentHTML("beforeend", attendanceDetail);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                    <td class="border px-4 py-2">${new Date(
+                      attendance.date
+                    ).toLocaleDateString()}</td>
+                    <td class="border px-4 py-2">${attendance.email}</td>
+                    <td class="border px-4 py-2">${attendance.starttime}</td>
+                    <td class="border px-4 py-2">${attendance.finishtime}</td>
+                    <td class="border px-4 py-2">${attendance.totalhours}</td>
+                    <td class="border px-4 py-2">${
+                      attendance.hoursnotworked
+                    }</td>
+                    <td class="border px-4 py-2">${attendance.reason}</td>
+                    <td class="border px-4 py-2">${attendance.task}</td>
+                    <td class="border px-4 py-2">${
+                      attendance.timetocatchup
+                    }</td>
+                    <td class="border px-4 py-2">${
+                      attendance.caughtup ? "Yes" : "No"
+                    }</td>
+                    <td class="border px-4 py-2">${attendance.authorized}</td>
+                    <td class="border px-4 py-2">${
+                      attendance.sick ? "Yes" : "No"
+                    }</td>
+                  <td class="border px-4 py-2">
+    <button onclick="editAttendance('${attendance._id}', '${
+              attendance.email
+            }')" class="bg-red-500 text-white px-2 py-1 rounded hover:text-blue-700">Edit</button>
+</td>
+
+                `;
+            tbody.appendChild(row);
           });
+
+          table.appendChild(tbody);
+          attendanceList.appendChild(table);
         } else {
           attendanceList.innerHTML = "<p>No attendance records found.</p>";
+        }
+      }
+
+      async function editAttendance(attendanceId, userEmail) {
+        // Get the email from session storage (or however you manage user sessions)
+        const userData = JSON.parse(sessionStorage.getItem("userData"));
+        const admin_email = userData.user.Email; // Get the admin email or relevant email
+
+        // Create the body data for the API request
+        const bodyData = {
+          _id: attendanceId, // Use the passed attendance ID
+          admin_email: admin_email, // Use the email from session storage
+          employee_email: userEmail, // Assuming the same for the employee, you might change this
+          authorized: "UNPAID", // Update this value as needed
+          caught_up: false // Set this based on your logic
+        };
+
+        // Make the API request to update attendance
+        const response = await fetch(
+          "http://localhost:8080/updateuserattendance?email=" + admin_email,
+          {
+            method: "PATCH", // Use PUT for updates
+            headers: {
+              "Content-Type": "application/json", // Set the content type
+              Authorization: `Bearer ${getToken()}` // Include Bearer token
+            },
+            body: JSON.stringify(bodyData) // Convert the body data to JSON
+          }
+        );
+
+        // Handle the response
+        if (response.ok) {
+          const data = await response.json();
+          alert("Attendance updated successfully!");
+          getUserAttendance(userEmail); // Optionally refresh the user attendance list
+        } else {
+          const error = await response.json();
+          alert("Failed to update attendance: " + error.message);
         }
       }
 
