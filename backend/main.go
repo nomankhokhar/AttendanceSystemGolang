@@ -5,12 +5,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
-
+	"AttendanceSystem/controllers/adminController"
 	"AttendanceSystem/controllers/attendanceController"
 	"AttendanceSystem/controllers/userController"
 	"AttendanceSystem/db"
+
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func CORS() gin.HandlerFunc {
@@ -64,6 +65,15 @@ func main() {
 	r.GET("/attendance/getattendance", attendanceController.GetAttendanceByEmail)
 	r.DELETE("/attendance/deleteattendance", attendanceController.DeleteAttendanceByEmailAndID)
 	r.POST("/attendance/updateattendance", attendanceController.UpdateAttendanceByEmailAndID)
+
+	// Admin Controller Handlers
+	r.POST("/createuser", adminController.CreateUser)
+	r.PATCH("/updateUser", adminController.UpdateUser)
+	r.GET("/getallusers", adminController.GetAllUsers)
+	r.DELETE("/deleteauser", adminController.DeleteUser)
+	r.GET("/getuserattendance", adminController.GetUserAttendanceDetail)
+	r.PATCH("/updateuserattendance", adminController.UpdateUserAttendance)
+
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
