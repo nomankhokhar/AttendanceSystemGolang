@@ -35,147 +35,138 @@
       </h1>
 
       <!-- Tabs for Navigation -->
-      <div class="flex space-x-4 mb-6">
-        <button
-          onclick="showTab('userInfo')"
-          id="tabUserInfo"
-          class="bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          User Info
-        </button>
-        <button
-          onclick="showTab('allAttendance')"
-          id="tabAllAttendance"
-          class="bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          All Attendance
-        </button>
-        <button
-          onclick="showTab('addAttendance')"
-          id="tabAddAttendance"
-          class="bg-blue-500 text-white py-2 px-4 rounded"
-        >
-          Add Attendance
-        </button>
+<div class="flex space-x-4 mb-6">
+  <button
+    onclick="showTab('userInfo')"
+    id="tabUserInfo"
+    class="bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-600"
+  >
+    User Info
+  </button>
+  <button
+    onclick="showTab('allAttendance')"
+    id="tabAllAttendance"
+    class="bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-600"
+  >
+    All Attendance
+  </button>
+  <button
+    onclick="showTab('addAttendance')"
+    id="tabAddAttendance"
+    class="bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-600"
+  >
+    Add Attendance
+  </button>
+</div>
+
+<!-- User Info Tab -->
+<div id="userInfo" class="tab-content">
+  <h2 class="text-xl font-medium text-white mb-4">User Information</h2>
+  <div id="userInfoContent"></div>
+</div>
+
+<!-- All Attendance Tab -->
+<div id="allAttendance" class="tab-content">
+  <h2 class="text-xl font-medium text-white mb-4">Attendance Records</h2>
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse border border-gray-700">
+      <thead>
+        <tr class="bg-gray-800">
+          <th class="border border-gray-700 px-4 py-2 text-white">Date</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Start Time</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Finish Time</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Hours Not Worked</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Reason</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Authorized</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Time to Catch Up</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Caught Up</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Sick</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Total Hours</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Task</th>
+          <th class="border border-gray-700 px-4 py-2 text-white">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="attendanceTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Attendance Tab -->
+<div id="addAttendance" class="tab-content hidden">
+  <form id="addAttendanceForm" class="space-y-4 mb-8">
+    <h2 class="text-xl font-medium text-white">Add Attendance</h2>
+
+    <div>
+      <label for="email" class="block text-gray-300">Email</label>
+      <input
+        type="email"
+        id="email"
+        class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+        required
+        disabled
+      />
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label for="start_time" class="block text-gray-300">Start Time</label>
+        <input
+          type="time"
+          id="start_time"
+          value="13:00"
+          class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+          required
+        />
       </div>
-
-      <!-- User Info Tab -->
-      <div id="userInfo" class="tab-content">
-        <h2 class="text-xl font-medium text-white mb-4">User Information</h2>
-        <div id="userInfoContent"></div>
-      </div>
-
-      <!-- All Attendance Tab -->
-      <div id="allAttendance" class="tab-content">
-        <h2 class="text-xl font-medium text-white mb-4">Attendance Records</h2>
-        <div class="overflow-x-auto">
-          <table class="min-w-full border-collapse border border-gray-300">
-            <thead>
-              <tr class="bg-gray-200">
-                <th class="border border-gray-300 px-4 py-2">Date</th>
-                <th class="border border-gray-300 px-4 py-2">Start Time</th>
-                <th class="border border-gray-300 px-4 py-2">Finish Time</th>
-                <th class="border border-gray-300 px-4 py-2">
-                  Hours Not Worked
-                </th>
-                <th class="border border-gray-300 px-4 py-2">Reason</th>
-                <th class="border border-gray-300 px-4 py-2">Authorized</th>
-                <th class="border border-gray-300 px-4 py-2">
-                  Time to Catch Up
-                </th>
-                <th class="border border-gray-300 px-4 py-2">Caught Up</th>
-                <th class="border border-gray-300 px-4 py-2">Sick</th>
-                <th class="border border-gray-300 px-4 py-2">Total Hours</th>
-                <th class="border border-gray-300 px-4 py-2">Task</th>
-                <th class="border border-gray-300 px-4 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody id="attendanceTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Add Attendance Tab -->
-      <div id="addAttendance" class="tab-content hidden">
-        <form id="addAttendanceForm" class="space-y-4 mb-8">
-          <h2 class="text-xl font-medium text-white">Add Attendance</h2>
-
-          <div>
-            <label for="email" class="block text-gray-600">Email</label>
-            <input
-              type="email"
-              id="email"
-              class="w-full p-2 border border-gray-300 rounded-md"
-              required
-              disabled
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="start_time" class="block text-gray-600"
-                >Start Time</label
-              >
-              <input
-                type="time"
-                id="start_time"
-                value="13:00"
-                class="w-full p-2 border border-gray-300 rounded-md bg-gray-400"
-                required
-              />
-            </div>
-            <div>
-              <label for="finish_time" class="block text-gray-600"
-                >Finish Time</label
-              >
-              <input
-                type="time"
-                id="finish_time"
-                value="21:00"
-                class="w-full p-2 border border-gray-300 rounded-md bg-gray-400"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label for="hours_not_worked" class="block text-gray-600"
-              >Hours Not Worked</label
-            >
-            <input
-              type="number"
-              step="0.1"
-              id="hours_not_worked"
-              class="w-full p-2 border border-gray-300 rounded-md bg-gray-400"
-            />
-          </div>
-          <div>
-            <label for="reason" class="block text-gray-600">Reason</label>
-            <input
-              type="text"
-              id="reason"
-              class="w-full p-2 border border-gray-300 rounded-md bg-gray-400"
-            />
-          </div>
-          <div>
-            <label for="task" class="block text-gray-600">Task</label>
-            <input
-              type="text"
-              id="task"
-              class="w-full p-2 border border-gray-300 rounded-md bg-gray-400"
-              required
-            />
-          </div>
-          <button
-            type="button"
-            onclick="addAttendance()"
-            class="w-full bg-blue-500 text-white py-2 rounded-md"
-          >
-            Add Attendance
-          </button>
-        </form>
+      <div>
+        <label for="finish_time" class="block text-gray-300">Finish Time</label>
+        <input
+          type="time"
+          id="finish_time"
+          value="21:00"
+          class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+          required
+        />
       </div>
     </div>
+
+    <div>
+      <label for="hours_not_worked" class="block text-gray-300">Hours Not Worked</label>
+      <input
+        type="number"
+        step="0.1"
+        id="hours_not_worked"
+        class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+      />
+    </div>
+    <div>
+      <label for="reason" class="block text-gray-300">Reason</label>
+      <input
+        type="text"
+        id="reason"
+        class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+      />
+    </div>
+    <div>
+      <label for="task" class="block text-gray-300">Task</label>
+      <input
+        type="text"
+        id="task"
+        class="w-full p-2 border border-gray-700 rounded-md bg-gray-800 text-white"
+        required
+      />
+    </div>
+    <button
+      type="button"
+      id="buttonAddAttendance"
+      onclick="addAttendance()"
+      class="w-full bg-blue-700 text-white py-2 rounded-md hover:bg-blue-600"
+    >
+      Add Attendance
+    </button>
+  </form>
+</div>
+
 
     <script>
       if (sessionStorage.getItem("userData")) {
@@ -188,7 +179,8 @@
       } else {
         window.location.href = "/frontend";
       }
-
+      let todayAttendance = getTodayDate()
+      let attendanceAlreadyAdded = false
       // Fetch user data from session storage and display it
       function displayUserInfo() {
         const userData = JSON.parse(sessionStorage.getItem("userData"));
@@ -280,6 +272,7 @@
       }
       // Function to sort and display attendance records
       function sortAndDisplayAttendance(attendanceData, today) {
+        attendanceAlreadyAdded = false
         // Sort the attendances array by date in descending order
         const sortedAttendances = attendanceData?.attendances?.sort((a, b) => {
           const dateA = new Date(a.date);
@@ -289,9 +282,22 @@
 
         const tableBody = document.getElementById("attendanceTableBody");
         tableBody.innerHTML = ""; // Clear existing rows
-
+        sortedAttendances?.forEach((attendance) => {
+          // Check if attendance exists and split the date
+          const attendanceDate = attendance?.date?.split("T")[0];
+      
+          // Compare attendance date with today's date
+          if (String(attendanceDate) == String(todayAttendance)) {
+        
+            attendanceAlreadyAdded = true; // Set flag to true if today's date is found
+          }
+      });
         // Loop through the sorted attendance data and create table rows
         sortedAttendances?.forEach((attendance) => {
+          if (String(attendance?.date?.split("T")[0]) == String(todayAttendance))
+          {
+            attendanceAlreadyAdded = true;
+          }
           const row = document.createElement("tr");
           row.innerHTML = `
                 <td class="border px-4 py-2">${
@@ -362,6 +368,11 @@
       };
 
       async function addAttendance() {
+        if (attendanceAlreadyAdded) {
+          alert("Attendance already added for today");
+          return
+      } 
+      
         const userData = JSON.parse(sessionStorage.getItem("userData"));
         if (!userData) {
           alert("User data not found!");
@@ -430,6 +441,9 @@
         } else {
           alert("Failed to add attendance. Please try again.");
         }
+        document.getElementById("hours_not_worked").value = 0
+        document.getElementById("reason").value = ""
+        document.getElementById("task").value =  ""
       }
 
       async function deleteAttendance(id) {
