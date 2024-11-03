@@ -5,8 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <style>
+      /* Background image styling */
+      body {
+        background: url("https://images.unsplash.com/photo-1502481851512-e9e2529bfbf9?q=80&w=1469&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+          no-repeat center center fixed;
+        background-size: cover;
+        position: relative;
+      }
+      /* Position particles canvas behind the form */
+      #particles-js {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: -1;
+      }
+    </style>
   </head>
   <body class="bg-gray-100 min-h-screen flex justify-center items-start pt-10">
+    <!-- Particles Container -->
+    <div id="particles-js"></div>
     <div class="w-full max-w-3xl bg-white rounded-lg shadow-lg">
       <!-- Dashboard Header -->
       <div class="p-6 bg-blue-600 rounded-t-lg text-center text-white">
@@ -177,9 +198,9 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}` // Include Bearer token
+              Authorization: `Bearer ${getToken()}`, // Include Bearer token
             },
-            body: JSON.stringify({ name, email: userEmail, password, role })
+            body: JSON.stringify({ name, email: userEmail, password, role }),
           }
         );
 
@@ -204,8 +225,8 @@
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${getToken()}` // Include Bearer token
-            }
+              Authorization: `Bearer ${getToken()}`, // Include Bearer token
+            },
           }
         );
 
@@ -244,12 +265,12 @@
             method: "DELETE",
             headers: {
               Authorization: `Bearer ${getToken()}`,
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               email: userEmail,
-              name: userName
-            })
+              name: userName,
+            }),
           }
         );
 
@@ -270,13 +291,13 @@
               method: "PATCH",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${getToken()}` // Include Bearer token
+                Authorization: `Bearer ${getToken()}`, // Include Bearer token
               },
               body: JSON.stringify({
                 email: userEmail,
                 name: userName,
-                password: newPassword
-              })
+                password: newPassword,
+              }),
             }
           );
           const data = await response.json();
@@ -291,8 +312,8 @@
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${getToken()}` // Include Bearer token
-            }
+              Authorization: `Bearer ${getToken()}`, // Include Bearer token
+            },
           }
         );
         const data = await response.json();
@@ -380,7 +401,7 @@
           admin_email: admin_email, // Use the email from session storage
           employee_email: userEmail, // Assuming the same for the employee, you might change this
           authorized: "UNPAID", // Update this value as needed
-          caught_up: false // Set this based on your logic
+          caught_up: false, // Set this based on your logic
         };
 
         // Make the API request to update attendance
@@ -390,9 +411,9 @@
             method: "PATCH", // Use PUT for updates
             headers: {
               "Content-Type": "application/json", // Set the content type
-              Authorization: `Bearer ${getToken()}` // Include Bearer token
+              Authorization: `Bearer ${getToken()}`, // Include Bearer token
             },
-            body: JSON.stringify(bodyData) // Convert the body data to JSON
+            body: JSON.stringify(bodyData), // Convert the body data to JSON
           }
         );
 
@@ -430,8 +451,8 @@
           {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${getToken()}` // Include Bearer token
-            }
+              Authorization: `Bearer ${getToken()}`, // Include Bearer token
+            },
           }
         );
         const users = await response.json();
@@ -449,5 +470,6 @@
       // Initialize by loading the user list on page load
       document.addEventListener("DOMContentLoaded", getAllUsers);
     </script>
+    <script src="../assets/particle.js"></script>
   </body>
 </html>
