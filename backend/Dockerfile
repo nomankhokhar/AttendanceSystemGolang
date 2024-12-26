@@ -1,34 +1,40 @@
-# backend/Dockerfile
-FROM golang:1.20 AS builder
+# Start by pulling the official Go image for building the application
+FROM golang:1.23 AS builder
 
-# Set the Current Working Directory inside the container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Go Modules and Sum Files
-COPY go.mod go.sum ./
+# Copy all files from the backend folder to the container
+COPY ./ .
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+# Download dependencies and build the Go binary
 RUN go mod download
+RUN go build -o app
 
-# Copy the source code into the container
-COPY . .
+# Use Ubuntu as the base image
+FROM ubuntu:22.04
 
-# Build the Go app
-RUN go build -o main .
+# Update packages and install required libraries
+RUN apt-get update && apt-get install -y \
+    libc6 \
+    wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Start a new stage from scratch
-FROM alpine:latest
+# Set the working directory
+WORKDIR /app
 
-WORKDIR /root/
+# Copy the built binary from the builder stage
+COPY --from=builder /app/app .
 
-# Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/main .
+# Copy the .env file into the container
+COPY .env /app/.env
 
-# Copy .env file to the working directory
-COPY --from=builder /app/.env .
-
-# Expose port 8080 to the outside world
+# Expose the application port
 EXPOSE 8080
 
-# Command to run the executable
-CMD ["./main"]
+# Load environment variables from .env file
+ENV $(cat /app/.env | xargs)
+
+# Command to run the application
+CMD ["/app/app"]
