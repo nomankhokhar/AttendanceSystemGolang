@@ -1,8 +1,14 @@
-# frontend/Dockerfile
-FROM nginx:alpine
+# Use the official Nginx image
+FROM nginx:latest
 
-# Copy the HTML files and assets from the frontend directory to the nginx html folder
-COPY . /usr/share/nginx/html
+# Set the working directory inside the container
+WORKDIR /usr/share/nginx/html
 
-# Expose port 80 to the outside world
+# Copy all frontend files to the Nginx HTML directory
+COPY ./ /usr/share/nginx/html
+
+# Expose port 80 for the Nginx server
 EXPOSE 80
+
+# Command to run Nginx
+CMD ["nginx", "-g", "daemon off;"]
