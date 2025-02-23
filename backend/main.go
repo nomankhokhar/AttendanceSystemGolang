@@ -11,7 +11,6 @@ import (
 	"AttendanceSystem/db"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func CORS() gin.HandlerFunc {
@@ -30,10 +29,6 @@ func CORS() gin.HandlerFunc {
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
 	mongoClient, err := db.InitDB()
 
 	if err != nil {
