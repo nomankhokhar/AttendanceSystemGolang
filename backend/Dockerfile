@@ -1,40 +1,31 @@
-# Start by pulling the official Go image for building the application
-FROM golang:1.23 AS builder
+# Stage 1, use Goland alpine builder
+FROM golang:alpine as builder
 
-# Set the working directory inside the container
-WORKDIR /app
+# Move to working directory /build
+WORKDIR /build
 
-# Copy all files from the backend folder to the container
-COPY ./ .
-
-# Download dependencies and build the Go binary
+# Copy and download dependency using go mod
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
-RUN go build -o app
 
-# Use Ubuntu as the base image
-FROM ubuntu:22.04
+# Copy the code into the container
+COPY . .
 
-# Update packages and install required libraries
-RUN apt-get update && apt-get install -y \
-    libc6 \
-    wget \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# COPY ./Build the package/ .
+RUN go clean && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o gripo-cron-linux-amd64
 
-# Set the working directory
-WORKDIR /app
+# Build a small image
+FROM alpine
 
-# Copy the built binary from the builder stage
-COPY --from=builder /app/app .
+# Copy the build pakcage to "gripo-cron" folder
+COPY --from=builder /build/gripo-cron-linux-amd64 /gripo-cron/gripo-cron-linux-amd64
 
-# Copy the .env file into the container
-COPY .env /app/.env
+# Set to working directory
+WORKDIR /gripo-cron/
 
-# Expose the application port
+# Expose the backend port
 EXPOSE 8080
 
-# Load environment variables from .env file
-ENV $(cat /app/.env | xargs)
-
-# Command to run the application
-CMD ["/app/app"]
+# Docker will run backend Prodgram when we start docker
+ENTRYPOINT ["./gripo-cron-linux-amd64"]
