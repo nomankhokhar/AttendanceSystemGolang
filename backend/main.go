@@ -69,7 +69,7 @@ func main() {
 	r.GET("/getuserattendance", adminController.GetUserAttendanceDetail)
 	r.PATCH("/updateuserattendance", adminController.UpdateUserAttendance)
 
-	if err := r.Run(":8080"); err != nil {
+	if err := r.Run(":5000"); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 }
